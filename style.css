@@ -1,0 +1,15 @@
+/* Style Global SITTA UT */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.navbar-ut {
+    background-color: #003366 !important;
+}
+.navbar-ut .navbar-brand, .navbar-ut .nav-link {
+    color: #ffffff !important;
+}
+.navbar-ut .nav-link.active {
+    font-weight: bold;
+    border-bottom: 2px solid #ffcc00;
+}

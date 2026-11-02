@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking DO - SITTA UT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-ut shadow-sm">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="dashboard.html">SITTA UT</a>
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="stok.html">Stok Bahan Ajar</a>
+                    <a class="nav-link active" href="tracking.html">Tracking DO</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container my-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Tracking & Pemesanan Delivery Order</h2>
+                <span class="badge bg-primary fs-6">Tugas Praktik 3</span>
+            </div>
+
+            <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ successMessage }}
+                <button type="button" class="btn-close" @click="successMessage = ''"></button>
+            </div>
+
+            <div class="card p-4 mb-4 shadow-sm border-0">
+                <h4 class="card-title text-primary mb-3">Buat Delivery Order Baru</h4>
+                <div v-if="errorMessage" class="alert alert-danger" v-text="errorMessage"></div>
+                
+                <form @submit.prevent="submitDO">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nomor DO (Otomatis)</label>
+                            <input type="text" class="form-control bg-light" value="DO2026-002" disabled>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">NIM*</label>
+                            <input type="text" class="form-control" v-model.trim="form.nim" placeholder="Contoh: 123456789">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nama Mahasiswa*</label>
+                            <input type="text" class="form-control" v-model.trim="form.nama" placeholder="Nama Lengkap">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Ekspedisi*</label>
+                            <select v-model="form.ekspedisi" class="form-select">
+                                <option value="">-- Pilih Ekspedisi --</option>
+                                <option v-for="eks in ekspedisiOptions" :key="eks" :value="eks">{{ eks }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Paket Bahan Ajar*</label>
+                            <select v-model="form.selectedPaket" class="form-select">
+                                <option :value="null">-- Pilih Paket --</option>
+                                <option v-for="pkt in paketOptions" :key="pkt.kode" :value="pkt">
+                                    {{ pkt.kode }} - {{ pkt.namaPaket }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Tanggal Kirim*</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" v-model="form.tanggal" placeholder="31-Oct-2026">
+                                <button class="btn btn-outline-secondary" type="button" title="Pilih Tanggal">📅</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="form.selectedPaket" class="mt-4 p-3 bg-light rounded border border-primary">
+                        <h6 class="text-primary font-weight-bold">Ringkasan Paket Terpilih:</h6>
+                        <p class="mb-1"><strong>Kode Paket:</strong> {{ form.selectedPaket.kode }}</p>
+                        <p class="mb-1"><strong>Nama Paket:</strong> {{ form.selectedPaket.namaPaket }}</p>
+                        <p class="mb-0"><strong>Total Harga Paket:</strong> <span class="fs-5 text-success fw-bold">{{ computedTotalHarga }}</span></p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-3 w-100 py-2">Simpan Delivery Order</button>
+                </form>
+            </div>
+
+            <div class="card p-3 shadow-sm border-0">
+                <h4 class="card-title mb-3">Lacak Status Delivery Order</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nomor DO</th>
+                                <th>NIM</th>
+                                <th>Nama Mahasiswa</th>
+                                <th>Paket Bahan Ajar</th>
+                                <th>Ekspedisi</th>
+                                <th>Tanggal Kirim</th>
+                                <th>Total Harga</th>
+                                <th>Status</th>
+                                <th>Aksi Tanggal Kirim</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="doItem in doList" :key="doItem.nomorDO">
+                                <td><strong>{{ doItem.nomorDO }}</strong></td>
+                                <td>{{ doItem.nim }}</td>
+                                <td>{{ doItem.nama }}</td>
+                                <td>{{ doItem.paket }}</td>
+                                <td><span class="badge bg-info text-dark">{{ doItem.ekspedisi }}</span></td>
+                                <td>{{ doItem.tanggal }}</td>
+                                <td>{{ doItem.total }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ doItem.status }}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @click="updateTanggalKirim(doItem)">
+                                        📅 Ubah Tgl Kirim
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dataBahanAjar.js"></script>
+    <script src="js/tracking-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
